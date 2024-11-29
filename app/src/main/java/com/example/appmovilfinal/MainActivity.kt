@@ -6,11 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier // Importar Modifier
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
-import com.example.appmovilfinal.ui.theme.AppMovilFinalTheme // Verifica que este nombre sea el correcto
+import com.example.appmovilfinal.ui.theme.AppMovilFinalTheme
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: SensorViewModel
@@ -21,7 +21,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AppMovilFinalTheme { // Verifica que el nombre de tu tema esté correcto
-                // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     Column(
                         modifier = Modifier
@@ -48,6 +47,17 @@ class MainActivity : ComponentActivity() {
                             Text("Obtener Datos")
                         }
 
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Botón para obtener los valores extremos
+                        Button(onClick = {
+                            if (fecha.isNotEmpty()) {
+                                viewModel.obtenerValoresExtremos(fecha)
+                            }
+                        }) {
+                            Text("Obtener Valores Extremos")
+                        }
+
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Mostrar los datos obtenidos
@@ -63,6 +73,15 @@ class MainActivity : ComponentActivity() {
                                 Text("Hora: ${data.readableTime}")
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Mostrar los valores extremos
+                        val valoresExtremos = viewModel.valoresExtremos.collectAsState()
+                        valoresExtremos.value?.let { extremos ->
+                            Text("Máximo Total: ${extremos.max_total ?: "No disponible"}")
+                            Text("Mínimo Total: ${extremos.min_total ?: "No disponible"}")
                         }
                     }
                 }

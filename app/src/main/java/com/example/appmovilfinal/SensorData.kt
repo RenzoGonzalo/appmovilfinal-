@@ -11,3 +11,8 @@ data class SensorData(
     @Json(name = "totalForce") val totalForce: Float,
     @Json(name = "readableTime") val readableTime: String
 )
+data class ExtremosResponse(
+    val fecha: String,
+    val max_total: Float?,
+    val min_total: Float?
+)
