@@ -3,6 +3,7 @@ package com.example.appmovilfinal
 import com.squareup.moshi.Json
 
 data class SensorData(
+    @Json(name = "id") val id: Int,  // Identificador único
     @Json(name = "sensor1Force") val sensor1Force: Float,
     @Json(name = "sensor2Force") val sensor2Force: Float,
     @Json(name = "sensor3Force") val sensor3Force: Float,
@@ -11,6 +12,7 @@ data class SensorData(
     @Json(name = "totalForce") val totalForce: Float,
     @Json(name = "readableTime") val readableTime: String
 )
+
 data class ExtremosResponse(
     val fecha: String,
     val max_total: Float?,

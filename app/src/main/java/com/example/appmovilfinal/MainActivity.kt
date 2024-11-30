@@ -159,7 +159,7 @@ fun RegisterScreen(viewModel: SensorViewModel, navController: NavHostController)
 
 @Composable
 fun ObtenerDatosScreen(viewModel: SensorViewModel) {
-    var fechaInput by remember { mutableStateOf("") }  // Campo de fecha editable
+    var fechaInput by remember { mutableStateOf("") } // Campo de fecha editable
     val cargandoDatos by viewModel.cargandoDatos.collectAsState(initial = false)
     val datos by viewModel.datos.collectAsState(initial = emptyList())
 
@@ -175,11 +175,14 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Botón para obtener los datos
-        Button(onClick = {
-            if (fechaInput.isNotEmpty()) {
-                viewModel.obtenerDatos(fechaInput) // Llamar a obtener los datos con la fecha ingresada
-            }
-        }) {
+        Button(
+            onClick = {
+                if (fechaInput.isNotEmpty()) {
+                    viewModel.obtenerDatos(fechaInput) // Llamar a obtener los datos con la fecha ingresada
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Obtener Datos")
         }
 
@@ -187,13 +190,14 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
 
         // Mostrar indicador de carga
         if (cargandoDatos) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         }
 
         // Mostrar los datos cuando estén disponibles
         LazyColumn(modifier = Modifier.padding(16.dp)) {
             items(datos) { dato ->
                 Column(modifier = Modifier.padding(bottom = 8.dp)) {
+                    Text("ID: ${dato.id}", style = MaterialTheme.typography.bodyMedium) // Cambio aquí
                     Text("Sensor1: ${dato.sensor1Force}")
                     Text("Sensor2: ${dato.sensor2Force}")
                     Text("Sensor3: ${dato.sensor3Force}")
@@ -203,6 +207,7 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
                     Text("Hora: ${dato.readableTime}")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+                Divider()
             }
         }
     }

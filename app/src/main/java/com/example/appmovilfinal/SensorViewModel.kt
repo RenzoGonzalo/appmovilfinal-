@@ -45,8 +45,13 @@ class SensorViewModel : ViewModel() {
             override fun onResponse(call: Call<List<SensorData>>, response: Response<List<SensorData>>) {
                 _cargandoDatos.value = false // Detener carga
                 if (response.isSuccessful) {
-                    response.body()?.let {
-                        _datos.value = it // Actualizar el flujo con los datos obtenidos
+                    response.body()?.let { listaDatos ->
+                        _datos.value = listaDatos // Actualizar el flujo con los datos obtenidos
+
+                        // Log para verificar los IDs
+                        listaDatos.forEach { dato ->
+                            Log.d("SensorViewModel", "ID: ${dato.id}, Sensor1Force: ${dato.sensor1Force}")
+                        }
                     } ?: run {
                         _errorDatos.value = "Error: La respuesta no contiene datos."
                         Log.e("SensorViewModel", "La respuesta no contiene datos.")
@@ -132,4 +137,25 @@ class SensorViewModel : ViewModel() {
             }
         })
     }
+}
+// Función para eliminar un dato específico
+fun eliminarDato(id: Int) {
+    val call = ApiClient.apiService.eliminarDato(id)
+
+    call.enqueue(object : Callback<Void> {
+        override fun onResponse(call: Call<Void>, response: Response<Void>) {
+            if (response.isSuccessful) {
+                // Filtra el registro eliminado de la lista
+                val nuevaLista = _datos.value.filter { it.id != id }
+                _datos.value = nuevaLista // Actualiza la lista
+                Log.d("SensorViewModel", "Registro con ID $id eliminado correctamente.")
+            } else {
+                Log.e("SensorViewModel", "Error al eliminar el registro: ${response.message()}")
+            }
+        }
+
+        override fun onFailure(call: Call<Void>, t: Throwable) {
+            Log.e("SensorViewModel", "Error en la petición: ${t.message}")
+        }
+    })
 }

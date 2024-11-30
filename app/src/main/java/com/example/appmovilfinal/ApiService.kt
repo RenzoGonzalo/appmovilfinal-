@@ -2,8 +2,10 @@ package com.example.appmovilfinal
 
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface   ApiService {
@@ -21,4 +23,8 @@ interface   ApiService {
 
     @POST("api/register/")
     fun register(@Body registerRequest: RegisterRequest): Call<RegisterResponse>
+
+
+    @DELETE("api/eliminar/{id}/")
+    fun eliminarDato(@Path("id") id: Int): Call<Void>
 }
