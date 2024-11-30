@@ -19,6 +19,7 @@ class SensorViewModel : ViewModel() {
     val datos: StateFlow<List<SensorData>> get() = _datos
 
 
+
     private val _valoresExtremos = MutableStateFlow<ExtremosResponse?>(null)
     val valoresExtremos: StateFlow<ExtremosResponse?> = _valoresExtremos
 
@@ -72,6 +73,7 @@ class SensorViewModel : ViewModel() {
             override fun onResponse(call: Call<ExtremosResponse>, response: Response<ExtremosResponse>) {
                 _cargandoDatos.value = false // Detener carga
                 if (response.isSuccessful) {
+                    // Aquí asegúrate de que _valoresExtremos está siendo actualizado con la respuesta
                     _valoresExtremos.value = response.body()
                 } else {
                     _errorDatos.value = "Error en la respuesta: ${response.message()}"
@@ -86,6 +88,8 @@ class SensorViewModel : ViewModel() {
             }
         })
     }
+
+
 
     // Función de login
     fun login(username: String, password: String) {

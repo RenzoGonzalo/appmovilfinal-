@@ -1,11 +1,13 @@
 package com.example.appmovilfinal
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -18,8 +20,11 @@ import com.example.appmovilfinal.ui.theme.AppMovilFinalTheme
 
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-
+import androidx.compose.ui.Alignment
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: SensorViewModel
@@ -49,8 +54,11 @@ fun AppNavHost(viewModel: SensorViewModel) {
         composable("register") {
             RegisterScreen(viewModel, navController)
         }
-        composable("obtenerDatos") {  // Ya no necesitamos el parámetro de fecha
-            ObtenerDatosScreen(viewModel)  // Llamamos sin la fecha estática
+        composable("panelDeControl") {
+            PanelDeControlScreen(navController) // Nueva pantalla principal
+        }
+        composable("obtenerDatos") {
+            ObtenerDatosScreen(viewModel)
         }
         composable("obtenerValoresExtremos") {
             ValoresExtremosScreen(viewModel)
@@ -89,7 +97,7 @@ fun LoginScreen(viewModel: SensorViewModel, navController: NavHostController) {
         Button(onClick = {
             if (username.isNotEmpty() && password.isNotEmpty()) {
                 viewModel.login(username, password)
-                navController.navigate("obtenerDatos") // Navegar a la pantalla de obtenerDatos
+                navController.navigate("panelDeControl") // Navegar al Panel de Control
             }
         }) {
             Text("Iniciar sesión")
@@ -102,7 +110,6 @@ fun LoginScreen(viewModel: SensorViewModel, navController: NavHostController) {
         }
     }
 }
-
 @Composable
 fun RegisterScreen(viewModel: SensorViewModel, navController: NavHostController) {
     var username by remember { mutableStateOf("") }
@@ -178,18 +185,6 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Botón para obtener los valores extremos
-        Button(onClick = {
-            if (fechaInput.isNotEmpty()) {
-                // Navegar a la ruta de obtener los valores extremos
-                viewModel.obtenerValoresExtremos(fechaInput) // Llamar a obtener los valores extremos
-            }
-        }) {
-            Text("Obtener Valores Extremos")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Mostrar indicador de carga
         if (cargandoDatos) {
             CircularProgressIndicator()
@@ -214,35 +209,36 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
 }
 
 
-
 @Composable
 fun ValoresExtremosScreen(viewModel: SensorViewModel) {
     // Obtenemos los valores de la UI State del ViewModel
     val cargandoDatos by viewModel.cargandoDatos.collectAsState(initial = false)
     val valoresExtremos by viewModel.valoresExtremos.collectAsState(initial = null)
-    val errorDatos by viewModel.errorDatos.collectAsState(initial = "")
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        // Campo de texto para ingresar la fecha
-        var fechaInput by remember { mutableStateOf("") }
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .padding(16.dp)
+    ) {
+        // Fila para mostrar la entrada de fecha y el botón
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            var fechaInput by remember { mutableStateOf("") }
 
-        // Campo de texto para ingresar la fecha
-        TextField(
-            value = fechaInput,
-            onValueChange = { fechaInput = it },
-            label = { Text("Ingresa la fecha (YYYY-MM-DD)") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            // Campo de texto para ingresar la fecha
+            TextField(
+                value = fechaInput,
+                onValueChange = { fechaInput = it },
+                label = { Text("Ingresa la fecha (YYYY-MM-DD)") },
+                modifier = Modifier.weight(1f) // Esto hace que ocupe el espacio disponible
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botón para obtener los valores extremos
-        Button(onClick = {
-            if (fechaInput.isNotEmpty()) {
-                viewModel.obtenerValoresExtremos(fechaInput) // Llamar a obtener los valores extremos con la fecha ingresada
+            // Botón para obtener los valores extremos
+            Button(onClick = {
+                if (fechaInput.isNotEmpty()) {
+                    viewModel.obtenerValoresExtremos(fechaInput) // Llamar a obtener los valores extremos
+                }
+            }) {
+                Text("Obtener Valores Extremos")
             }
-        }) {
-            Text("Obtener Valores Extremos")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -252,14 +248,46 @@ fun ValoresExtremosScreen(viewModel: SensorViewModel) {
             CircularProgressIndicator()
         }
 
-        // Mostrar los valores extremos cuando estén disponibles
-        if (valoresExtremos != null) {
-            Text("Fecha: ${valoresExtremos?.fecha}")
-            Text("Valor Máximo: ${valoresExtremos?.max_total ?: "No disponible"}")
-            Text("Valor Mínimo: ${valoresExtremos?.min_total ?: "No disponible"}")
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Mostrar los resultados en una columna en la parte inferior
+        valoresExtremos?.let { extremos ->
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("Fecha: ${extremos.fecha}")
+                Text("Valor Máximo: ${extremos.max_total?.toString() ?: "No disponible"}")
+                Text("Valor Mínimo: ${extremos.min_total?.toString() ?: "No disponible"}")
+            }
+        }
+    }
+}
+@Composable
+fun PanelDeControlScreen(navController: NavHostController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Panel de Control",
+            fontSize = 24.sp, // Tamaño de la fuente
+            fontWeight = FontWeight.Bold // Estilo de la fuente
+        )
+
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón para navegar a ObtenerDatosScreen
+        Button(onClick = { navController.navigate("obtenerDatos") }) {
+            Text("Ir a Obtener Datos")
         }
 
-        // Mostrar error si ocurre un problema
+        Spacer(modifier = Modifier.height(16.dp))
 
+        // Botón para navegar a ValoresExtremosScreen
+        Button(onClick = { navController.navigate("obtenerValoresExtremos") }) {
+            Text("Ir a Valores Extremos")
+        }
     }
 }
