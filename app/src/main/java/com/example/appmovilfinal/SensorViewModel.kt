@@ -24,37 +24,54 @@ class SensorViewModel : ViewModel() {
     private val _registerResponse = MutableStateFlow<RegisterResponse?>(null)
     val registerResponse: StateFlow<RegisterResponse?> = _registerResponse
 
+    // Estado para la carga y los errores
+    private val _cargandoDatos = MutableStateFlow(false)
+    val cargandoDatos: StateFlow<Boolean> = _cargandoDatos
+
+    private val _errorDatos = MutableStateFlow<String?>(null)
+    val errorDatos: StateFlow<String?> = _errorDatos
+
     fun obtenerDatos(fecha: String) {
+        _cargandoDatos.value = true // Iniciar carga
         val call = ApiClient.apiService.obtenerDatos(fecha)
 
         call.enqueue(object : Callback<List<SensorData>> {
             override fun onResponse(call: Call<List<SensorData>>, response: Response<List<SensorData>>) {
+                _cargandoDatos.value = false // Detener carga
                 if (response.isSuccessful) {
                     _datos.value = response.body()
                 } else {
+                    _errorDatos.value = "Error en la respuesta: ${response.message()}"
                     Log.e("SensorViewModel", "Error en la respuesta: ${response.message()}")
                 }
             }
 
             override fun onFailure(call: Call<List<SensorData>>, t: Throwable) {
+                _cargandoDatos.value = false // Detener carga
+                _errorDatos.value = "Error en la petición: ${t.message}"
                 Log.e("SensorViewModel", "Error en la petición: ${t.message}")
             }
         })
     }
 
     fun obtenerValoresExtremos(fecha: String) {
+        _cargandoDatos.value = true // Iniciar carga
         val call = ApiClient.apiService.obtenerValoresExtremos(fecha)
 
         call.enqueue(object : Callback<ExtremosResponse> {
             override fun onResponse(call: Call<ExtremosResponse>, response: Response<ExtremosResponse>) {
+                _cargandoDatos.value = false // Detener carga
                 if (response.isSuccessful) {
                     _valoresExtremos.value = response.body()
                 } else {
+                    _errorDatos.value = "Error en la respuesta: ${response.message()}"
                     Log.e("SensorViewModel", "Error en la respuesta: ${response.message()}")
                 }
             }
 
             override fun onFailure(call: Call<ExtremosResponse>, t: Throwable) {
+                _cargandoDatos.value = false // Detener carga
+                _errorDatos.value = "Error en la petición: ${t.message}"
                 Log.e("SensorViewModel", "Error en la petición: ${t.message}")
             }
         })
