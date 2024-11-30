@@ -1,6 +1,8 @@
 package com.example.appmovilfinal
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,8 +13,11 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class SensorViewModel : ViewModel() {
-    private val _datos = MutableStateFlow<List<SensorData>?>(null)
-    val datos: StateFlow<List<SensorData>?> = _datos
+
+
+    private val _datos = MutableStateFlow<List<SensorData>>(emptyList())
+    val datos: StateFlow<List<SensorData>> get() = _datos
+
 
     private val _valoresExtremos = MutableStateFlow<ExtremosResponse?>(null)
     val valoresExtremos: StateFlow<ExtremosResponse?> = _valoresExtremos
@@ -39,7 +44,12 @@ class SensorViewModel : ViewModel() {
             override fun onResponse(call: Call<List<SensorData>>, response: Response<List<SensorData>>) {
                 _cargandoDatos.value = false // Detener carga
                 if (response.isSuccessful) {
-                    _datos.value = response.body()
+                    response.body()?.let {
+                        _datos.value = it // Actualizar el flujo con los datos obtenidos
+                    } ?: run {
+                        _errorDatos.value = "Error: La respuesta no contiene datos."
+                        Log.e("SensorViewModel", "La respuesta no contiene datos.")
+                    }
                 } else {
                     _errorDatos.value = "Error en la respuesta: ${response.message()}"
                     Log.e("SensorViewModel", "Error en la respuesta: ${response.message()}")

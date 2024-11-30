@@ -16,6 +16,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.example.appmovilfinal.ui.theme.AppMovilFinalTheme
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavController
+
+
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: SensorViewModel
 
@@ -44,14 +49,15 @@ fun AppNavHost(viewModel: SensorViewModel) {
         composable("register") {
             RegisterScreen(viewModel, navController)
         }
-        composable("obtenerDatos") {
-            MostrarDatos(viewModel)
+        composable("obtenerDatos") {  // Ya no necesitamos el parámetro de fecha
+            ObtenerDatosScreen(viewModel)  // Llamamos sin la fecha estática
         }
         composable("obtenerValoresExtremos") {
-            MostrarValoresExtremos(viewModel)
+            ValoresExtremosScreen(viewModel)
         }
     }
 }
+
 
 @Composable
 fun LoginScreen(viewModel: SensorViewModel, navController: NavHostController) {
@@ -145,46 +151,115 @@ fun RegisterScreen(viewModel: SensorViewModel, navController: NavHostController)
 }
 
 @Composable
-fun MostrarDatos(viewModel: SensorViewModel) {
-    val datos by viewModel.datos.collectAsState(initial = null)
+fun ObtenerDatosScreen(viewModel: SensorViewModel) {
+    var fechaInput by remember { mutableStateOf("") }  // Campo de fecha editable
+    val cargandoDatos by viewModel.cargandoDatos.collectAsState(initial = false)
+    val datos by viewModel.datos.collectAsState(initial = emptyList())
 
-    if (datos == null) {
-        // Indicador de carga mientras se obtienen los datos
-        CircularProgressIndicator(modifier = Modifier.fillMaxSize())
-    } else {
-        // Aseguramos que datos es una lista antes de usarlo
-        val listaDatos = datos ?: emptyList() // Evitar null
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        // Campo de texto para ingresar la fecha
+        TextField(
+            value = fechaInput,
+            onValueChange = { fechaInput = it },
+            label = { Text("Ingresa la fecha (YYYY-MM-DD)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón para obtener los datos
+        Button(onClick = {
+            if (fechaInput.isNotEmpty()) {
+                viewModel.obtenerDatos(fechaInput) // Llamar a obtener los datos con la fecha ingresada
+            }
+        }) {
+            Text("Obtener Datos")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón para obtener los valores extremos
+        Button(onClick = {
+            if (fechaInput.isNotEmpty()) {
+                // Navegar a la ruta de obtener los valores extremos
+                viewModel.obtenerValoresExtremos(fechaInput) // Llamar a obtener los valores extremos
+            }
+        }) {
+            Text("Obtener Valores Extremos")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Mostrar indicador de carga
+        if (cargandoDatos) {
+            CircularProgressIndicator()
+        }
+
+        // Mostrar los datos cuando estén disponibles
         LazyColumn(modifier = Modifier.padding(16.dp)) {
-            items(listaDatos) { dato ->
-                Text("Sensor1: ${dato.sensor1Force}")
-                Text("Sensor2: ${dato.sensor2Force}")
-                Text("Sensor3: ${dato.sensor3Force}")
-                Text("Sensor4: ${dato.sensor4Force}")
-                Text("Sensor5: ${dato.sensor5Force}")
-                Text("Total: ${dato.totalForce}")
-                Text("Hora: ${dato.readableTime}")
+            items(datos) { dato ->
+                Column(modifier = Modifier.padding(bottom = 8.dp)) {
+                    Text("Sensor1: ${dato.sensor1Force}")
+                    Text("Sensor2: ${dato.sensor2Force}")
+                    Text("Sensor3: ${dato.sensor3Force}")
+                    Text("Sensor4: ${dato.sensor4Force}")
+                    Text("Sensor5: ${dato.sensor5Force}")
+                    Text("Total: ${dato.totalForce}")
+                    Text("Hora: ${dato.readableTime}")
+                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
-
 }
 
 
-@Composable
-fun MostrarValoresExtremos(viewModel: SensorViewModel) {
-    val valoresExtremos by viewModel.valoresExtremos.collectAsState(initial = null)
 
-    if (valoresExtremos == null) {
-        // Indicador de carga mientras se obtienen los valores extremos
-        CircularProgressIndicator(modifier = Modifier.fillMaxSize())
-    } else {
-        valoresExtremos?.let { extremos ->
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Fecha: ${extremos.fecha}")
-                Text("Máximo total: ${extremos.max_total ?: "No disponible"}")
-                Text("Mínimo total: ${extremos.min_total ?: "No disponible"}")
+@Composable
+fun ValoresExtremosScreen(viewModel: SensorViewModel) {
+    // Obtenemos los valores de la UI State del ViewModel
+    val cargandoDatos by viewModel.cargandoDatos.collectAsState(initial = false)
+    val valoresExtremos by viewModel.valoresExtremos.collectAsState(initial = null)
+    val errorDatos by viewModel.errorDatos.collectAsState(initial = "")
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        // Campo de texto para ingresar la fecha
+        var fechaInput by remember { mutableStateOf("") }
+
+        // Campo de texto para ingresar la fecha
+        TextField(
+            value = fechaInput,
+            onValueChange = { fechaInput = it },
+            label = { Text("Ingresa la fecha (YYYY-MM-DD)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón para obtener los valores extremos
+        Button(onClick = {
+            if (fechaInput.isNotEmpty()) {
+                viewModel.obtenerValoresExtremos(fechaInput) // Llamar a obtener los valores extremos con la fecha ingresada
             }
+        }) {
+            Text("Obtener Valores Extremos")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Mostrar indicador de carga mientras se obtienen los datos
+        if (cargandoDatos) {
+            CircularProgressIndicator()
+        }
+
+        // Mostrar los valores extremos cuando estén disponibles
+        if (valoresExtremos != null) {
+            Text("Fecha: ${valoresExtremos?.fecha}")
+            Text("Valor Máximo: ${valoresExtremos?.max_total ?: "No disponible"}")
+            Text("Valor Mínimo: ${valoresExtremos?.min_total ?: "No disponible"}")
+        }
+
+        // Mostrar error si ocurre un problema
+
     }
 }
