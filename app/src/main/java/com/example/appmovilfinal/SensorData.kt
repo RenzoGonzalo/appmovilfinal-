@@ -16,3 +16,23 @@ data class ExtremosResponse(
     val max_total: Float?,
     val min_total: Float?
 )
+
+data class LoginRequest(
+    val username: String,
+    val password: String
+)
+data class LoginResponse(
+    val access: String,
+    val refresh: String
+)
+data class RegisterRequest(
+    val username: String,
+    val password: String,
+    val email: String
+)
+data class RegisterResponse(
+    val id: Int,
+    val username: String,
+    val email: String
+)
+
