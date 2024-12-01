@@ -197,7 +197,7 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
         LazyColumn(modifier = Modifier.padding(16.dp)) {
             items(datos) { dato ->
                 Column(modifier = Modifier.padding(bottom = 8.dp)) {
-                    Text("ID: ${dato.id}", style = MaterialTheme.typography.bodyMedium) // Cambio aquí
+                    Text("ID: ${dato.id}", style = MaterialTheme.typography.bodyMedium)
                     Text("Sensor1: ${dato.sensor1Force}")
                     Text("Sensor2: ${dato.sensor2Force}")
                     Text("Sensor3: ${dato.sensor3Force}")
@@ -205,6 +205,16 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
                     Text("Sensor5: ${dato.sensor5Force}")
                     Text("Total: ${dato.totalForce}")
                     Text("Hora: ${dato.readableTime}")
+
+                    // Agregar un botón para eliminar el dato
+                    Button(
+                        onClick = {
+                            viewModel.eliminarDato(dato.id)  // Llamar a la función eliminarDato
+                        },
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        Text("Eliminar Dato")
+                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Divider()
@@ -212,6 +222,7 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
         }
     }
 }
+
 
 
 @Composable

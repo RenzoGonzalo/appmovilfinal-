@@ -1,24 +1,17 @@
 package com.example.appmovilfinal
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class SensorViewModel : ViewModel() {
 
-
     private val _datos = MutableStateFlow<List<SensorData>>(emptyList())
     val datos: StateFlow<List<SensorData>> get() = _datos
-
-
 
     private val _valoresExtremos = MutableStateFlow<ExtremosResponse?>(null)
     val valoresExtremos: StateFlow<ExtremosResponse?> = _valoresExtremos
@@ -94,7 +87,37 @@ class SensorViewModel : ViewModel() {
         })
     }
 
+    // Función para eliminar un dato específico
+    fun eliminarDato(id: Int) {
+        _cargandoDatos.value = true // Iniciar carga
 
+        val call = ApiClient.apiService.eliminarDato(id)
+
+        call.enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                _cargandoDatos.value = false  // Detener carga
+
+                if (response.isSuccessful) {
+                    // El dato fue eliminado correctamente
+                    Log.d("SensorViewModel", "Dato eliminado exitosamente")
+
+                    // Actualiza la lista de datos, eliminando el dato que ya no existe
+                    _datos.value = _datos.value.filterNot { it.id == id }
+
+                    // Aquí también puedes agregar lógica para mostrar un mensaje o realizar alguna acción
+                } else {
+                    Log.e("SensorViewModel", "Error al eliminar el dato: ${response.message()}")
+                    _errorDatos.value = "Error al eliminar el dato: ${response.message()}"
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                _cargandoDatos.value = false  // Detener carga
+                Log.e("SensorViewModel", "Error en la petición de eliminación: ${t.message}")
+                _errorDatos.value = "Error en la petición de eliminación: ${t.message}"
+            }
+        })
+    }
 
     // Función de login
     fun login(username: String, password: String) {
@@ -137,25 +160,4 @@ class SensorViewModel : ViewModel() {
             }
         })
     }
-}
-// Función para eliminar un dato específico
-fun eliminarDato(id: Int) {
-    val call = ApiClient.apiService.eliminarDato(id)
-
-    call.enqueue(object : Callback<Void> {
-        override fun onResponse(call: Call<Void>, response: Response<Void>) {
-            if (response.isSuccessful) {
-                // Filtra el registro eliminado de la lista
-                val nuevaLista = _datos.value.filter { it.id != id }
-                _datos.value = nuevaLista // Actualiza la lista
-                Log.d("SensorViewModel", "Registro con ID $id eliminado correctamente.")
-            } else {
-                Log.e("SensorViewModel", "Error al eliminar el registro: ${response.message()}")
-            }
-        }
-
-        override fun onFailure(call: Call<Void>, t: Throwable) {
-            Log.e("SensorViewModel", "Error en la petición: ${t.message}")
-        }
-    })
 }

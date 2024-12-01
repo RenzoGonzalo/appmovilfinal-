@@ -24,7 +24,7 @@ interface   ApiService {
     @POST("api/register/")
     fun register(@Body registerRequest: RegisterRequest): Call<RegisterResponse>
 
-
-    @DELETE("api/eliminar/{id}/")
+    @DELETE("api/eliminar_datos/{id}/")
     fun eliminarDato(@Path("id") id: Int): Call<Void>
+
 }
