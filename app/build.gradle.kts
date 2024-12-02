@@ -51,6 +51,19 @@ android {
 
 dependencies {
 
+    // Dependencia para pruebas unitarias con JUnit
+    testImplementation ("junit:junit:4.13.2")
+    // Dependencias adicionales para pruebas en Android (opcional)
+    testImplementation ("androidx.test.ext:junit:1.1.3")
+    testImplementation ("androidx.test:core:1.4.0")
+    testImplementation ("org.mockito.kotlin:mockito-kotlin:4.1.0")
+    testImplementation ("org.mockito:mockito-core:4.8.0")
+    testImplementation ("org.mockito:mockito-inline:4.8.0")
+    testImplementation ("org.jetbrains.kotlin:kotlin-test:1.9.0")
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.2")
+    //pruebas
+
+
     implementation ("androidx.navigation:navigation-fragment-ktx:2.7.1")
     implementation ("androidx.navigation:navigation-ui-ktx:2.7.1")
 

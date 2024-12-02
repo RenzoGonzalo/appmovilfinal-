@@ -162,9 +162,16 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
     var fechaInput by remember { mutableStateOf("") } // Campo de fecha editable
     val cargandoDatos by viewModel.cargandoDatos.collectAsState(initial = false)
     val datos by viewModel.datos.collectAsState(initial = emptyList())
+    val errorDatos by viewModel.errorDatos.collectAsState(initial = null) // Nuevo estado para errores
+
+    // Limpiar estado solo al cambiar la fecha y antes de realizar la nueva consulta
+    LaunchedEffect(fechaInput) {
+        if (fechaInput.isNotEmpty()) {
+            viewModel.limpiarEstado()  // Limpiar estado previo al cambiar la fecha
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        // Campo de texto para ingresar la fecha
         TextField(
             value = fechaInput,
             onValueChange = { fechaInput = it },
@@ -174,11 +181,10 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Botón para obtener los datos
         Button(
             onClick = {
                 if (fechaInput.isNotEmpty()) {
-                    viewModel.obtenerDatos(fechaInput) // Llamar a obtener los datos con la fecha ingresada
+                    viewModel.obtenerDatos(fechaInput)  // Llamar a obtener los datos con la fecha ingresada
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -188,12 +194,19 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Mostrar indicador de carga
         if (cargandoDatos) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         }
 
-        // Mostrar los datos cuando estén disponibles
+        errorDatos?.let { mensajeError ->
+            Text(
+                text = mensajeError,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(vertical = 16.dp),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
         LazyColumn(modifier = Modifier.padding(16.dp)) {
             items(datos) { dato ->
                 Column(modifier = Modifier.padding(bottom = 8.dp)) {
@@ -206,7 +219,6 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
                     Text("Total: ${dato.totalForce}")
                     Text("Hora: ${dato.readableTime}")
 
-                    // Agregar un botón para eliminar el dato
                     Button(
                         onClick = {
                             viewModel.eliminarDato(dato.id)  // Llamar a la función eliminarDato
@@ -222,8 +234,6 @@ fun ObtenerDatosScreen(viewModel: SensorViewModel) {
         }
     }
 }
-
-
 
 @Composable
 fun ValoresExtremosScreen(viewModel: SensorViewModel) {

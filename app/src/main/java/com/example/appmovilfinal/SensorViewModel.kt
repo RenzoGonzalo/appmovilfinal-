@@ -13,6 +13,11 @@ class SensorViewModel : ViewModel() {
     private val _datos = MutableStateFlow<List<SensorData>>(emptyList())
     val datos: StateFlow<List<SensorData>> get() = _datos
 
+    fun limpiarEstado() {
+        _datos.value = emptyList()  // Limpiar los datos
+        _errorDatos.value = null    // Limpiar el error
+    }
+
     private val _valoresExtremos = MutableStateFlow<ExtremosResponse?>(null)
     val valoresExtremos: StateFlow<ExtremosResponse?> = _valoresExtremos
 
@@ -39,29 +44,34 @@ class SensorViewModel : ViewModel() {
                 _cargandoDatos.value = false // Detener carga
                 if (response.isSuccessful) {
                     response.body()?.let { listaDatos ->
-                        _datos.value = listaDatos // Actualizar el flujo con los datos obtenidos
-
-                        // Log para verificar los IDs
-                        listaDatos.forEach { dato ->
-                            Log.d("SensorViewModel", "ID: ${dato.id}, Sensor1Force: ${dato.sensor1Force}")
+                        if (listaDatos.isNotEmpty()) {
+                            _datos.value = listaDatos // Actualizar los datos
+                        } else {
+                            _errorDatos.value = "No hay datos disponibles para la fecha $fecha."
                         }
                     } ?: run {
-                        _errorDatos.value = "Error: La respuesta no contiene datos."
-                        Log.e("SensorViewModel", "La respuesta no contiene datos.")
+                        try {
+                            val errorMessage = response.errorBody()?.string() ?: "Error desconocido"
+                            _errorDatos.value = errorMessage
+                        } catch (e: Exception) {
+                            _errorDatos.value = "Error: La respuesta no contiene datos."
+                        }
                     }
                 } else {
                     _errorDatos.value = "Error en la respuesta: ${response.message()}"
-                    Log.e("SensorViewModel", "Error en la respuesta: ${response.message()}")
                 }
             }
 
             override fun onFailure(call: Call<List<SensorData>>, t: Throwable) {
                 _cargandoDatos.value = false // Detener carga
                 _errorDatos.value = "Error en la petición: ${t.message}"
-                Log.e("SensorViewModel", "Error en la petición: ${t.message}")
             }
         })
     }
+
+    // Función para eliminar un dato
+
+
 
     fun obtenerValoresExtremos(fecha: String) {
         _cargandoDatos.value = true // Iniciar carga
@@ -88,6 +98,8 @@ class SensorViewModel : ViewModel() {
     }
 
     // Función para eliminar un dato específico
+    // Eliminación de un dato de la lista
+    // Eliminación de un dato de la lista
     fun eliminarDato(id: Int) {
         _cargandoDatos.value = true // Iniciar carga
 
@@ -118,6 +130,8 @@ class SensorViewModel : ViewModel() {
             }
         })
     }
+
+
 
     // Función de login
     fun login(username: String, password: String) {
